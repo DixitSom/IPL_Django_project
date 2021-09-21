@@ -78,3 +78,26 @@ def extra_runs_by_teams(request, *args, **kwargs):
             result[team] = extra_runs
         
     return JsonResponse(result)
+
+
+# Top economical Bowlers
+def top_economical_bowlers(request, *args, **kwargs):
+    '''
+    function: It will give you top economical bowlers from IPL
+    return: JSON response View
+    '''
+
+    result = dict()
+
+    # Query the database
+    query = Delivery.objects.filter(match_ref__season = kwargs['year']).values_list('bowler').annotate(economy = Sum('total_runs')*6/ Count('bowler'), count=Count('bowler')).filter(count__gt = 100).order_by('economy')
+
+    # Iterate through results
+    for q in query:
+
+        bowler = q[0]    # Get the bowler
+        economy = q[1]   # Get the economy
+
+        result[bowler] = economy
+
+    return JsonResponse(result)
