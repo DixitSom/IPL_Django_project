@@ -1,10 +1,10 @@
 from django.http.response import JsonResponse
 
-from django.shortcuts import render, HttpResponse
+from django.shortcuts import render
 from django.db.models import F
-from django.db.models.aggregates import Count
+from django.db.models.aggregates import Count, Sum
 
-from .models import Match
+from .models import Match, Delivery
 
 # Create your views here.
 def number_of_matches_played(request, *args):
@@ -18,7 +18,7 @@ def number_of_matches_played(request, *args):
 
 
 # Win Matches view is here
-def won_matches_per_year(request, *args):
+def won_matches_per_year(request, *args, **kwargs):
     '''
     function: This will give you matches won by teams per year
     return: JSON response view
@@ -51,3 +51,30 @@ def won_matches_per_year(request, *args):
 
     return JsonResponse(result)
 
+
+# Extra runs conceded per team View is here
+def extra_runs_by_teams(request, *args, **kwargs):
+    '''
+    function: It will give you extra runs given by teamin year 2016
+    return: JSON response View
+    '''
+    
+    # This is the final result dictionary
+    result = dict()
+
+    # Query from database
+    query = Delivery.objects.filter(match_ref__season = kwargs['year']).values_list('bowling_team').annotate(Sum('extra_runs')).order_by()
+
+    # Iterate through the results
+    for q in query:
+
+        team = q[0]         # Get the Team
+        extra_runs = q[1]   # Get Extra Runs
+
+        # If team already in dictionary
+        if team in result.keys():
+            result[team] += extra_runs
+        else:
+            result[team] = extra_runs
+        
+    return JsonResponse(result)
