@@ -29,7 +29,7 @@ class Match(models.Model):
 class Delivery(models.Model):
 
     match_id = models.IntegerField()
-    match = models.ForeignKey(Match, on_delete=models.CASCADE)
+    match_ref = models.ForeignKey(Match, on_delete=models.CASCADE)
     inning = models.IntegerField()
     batting_team = models.CharField(max_length=10)
     bowling_team = models.CharField(max_length=10)
