@@ -4,6 +4,8 @@ from django.core.management.base import BaseCommand
 from django.apps import apps
 from django.db import transaction
 
+from .models import Match
+
 
 # This is the class to create command for importing dataset.
 class Command(BaseCommand):
@@ -35,6 +37,11 @@ class Command(BaseCommand):
                 for row in reader:
 
                     dictionary = {key: value for key, value in zip(header, row)}
+
+                    # Model is Delivery
+                    if options['model'] == 'Delivery':
+                        obj = Match.objects.get(pk = dictionary['match_id'])
+                        dictionary['match'] = obj
 
                     obj = _model(**dictionary)
                     obj.save()
