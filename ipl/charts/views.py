@@ -1,6 +1,6 @@
 from django.http.response import JsonResponse
 
-from django.shortcuts import render
+from django.shortcuts import render, resolve_url
 from django.db.models import F
 from django.db.models.aggregates import Count, Sum
 
@@ -13,8 +13,31 @@ def number_of_matches_played(request, *args):
     teams in all years
     return: JSON response view.
     '''
+    result = dict()
 
-    return JsonResponse(None)
+    query1 = Match.objects.values_list('team1', 'season').annotate(Count('team1')).order_by('season')
+    query2 = Match.objects.values_list('team2', 'season').annotate(Count('team2')).order_by('season')
+
+    for query in [query1, query2]:
+        for q in query:
+
+            team = q[0]    # Get the team
+            year = q[1]    # Get the year
+            count = q[2]   # Get the count
+
+            # If year is key in dictionary
+            if year in result.keys():
+
+                # If team is key in result[year]
+                if team in result[year].keys():
+                    result[year][team] += count
+                else:
+                    result[year][team] = count
+
+            else:
+                result[year] = {team: count}
+
+    return JsonResponse(result)
 
 
 # Win Matches view is here
@@ -101,3 +124,24 @@ def top_economical_bowlers(request, *args, **kwargs):
         result[bowler] = economy
 
     return JsonResponse(result)
+
+
+# Template Views form here
+def numberOfMatchesPlayed(request, *args, **kwargs):
+
+    return render(request, 'numberOfMatchesPlayed.html', {})
+
+
+def matchesWonPerYear(request, *args, **kwargs):
+
+    return render(request, 'numberOfMatchesWon.html', {})
+
+
+def extraRunsByTeams(request, *args, **kwargs):
+
+    return render(request, 'extraRunForTeam.html', {})
+
+
+def economicalBowler(request, *args, **kwargs):
+
+    return render(request, 'economicalBowlerOfYear.html', {})
