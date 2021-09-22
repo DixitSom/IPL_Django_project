@@ -1,29 +1,79 @@
 
 // This Will plot Number of matches played by teams.
 fetch("http://127.0.0.1:8000/json/matches_played/")
-  .then(response => response.json())
-  .then(data => {
-      Highcharts.chart('number-of-matches-played', {
-          chart: {
-              type: 'column'
-          },
-          title: {
-              text: 'Total Matches played in a Year'
-          },
-          xAxis: {
-              type: 'category',
-          },
-          yAxis: {
-              title: {
-                  text: 'Matches Played'
+    .then(response => response.json())
+    .then(data => {
+
+        console.log(data)
+
+    // Create a temprary array to store all year and teams
+        let all_years = [];
+        let all_teams = new Set();
+
+        for (item of Object.entries(data).slice(0, -1)){
+            
+            for (i of Object.entries(item[1])){
+                if(i[0]) {
+                    all_teams.add(i[0])
+                }
             }
-          },
-          series: [{
-              name: 'Total Matches',
-              data: Object.entries(data).sort((a, b) => b[1] - a[1]).slice(0, -1)
-          }]
-      });
-  });
+                
+            all_years.push(item[0])
+        }
+
+    //   To Store all series for plotting
+        let series = [];
+
+        for (year of all_years){
+            let values = []
+            for (team of all_teams){
+                values.push(data[year][team])
+            }
+            values = values.map(value => {
+                if (!value){
+                    return 0;
+                }
+                else {
+                    return value
+                }
+            })
+            series.push({
+                name: `${year}`,
+                data: values
+            })
+        }
+
+
+        Highcharts.chart('number-of-matches-played', {
+            chart: {
+                type: 'column'
+            },
+            title: {
+                text: 'Matches Played By Teams in Seasons'
+            },
+            xAxis: {
+                type: 'category',
+                categories: [...all_teams]
+            },
+            yAxis: {
+            title: {
+                    text: 'Count'
+            },
+            stackLabels: {
+                enabled: true
+            }
+            },
+            plotOptions: {
+            column: {
+                stacking: 'normal',
+                dataLabels: {
+                enabled: true
+                }
+            }
+            },
+            series: series
+        });
+    });
 
 
 // Extra Runs given by each team in 2016 is here
